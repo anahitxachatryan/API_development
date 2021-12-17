@@ -14,18 +14,20 @@ class Post(BaseModel):
     
 
 
-
+my_posts = [{"title":"title of post 1","content":"content of post 1","id":1},
+            {"title2":"title of post 2","content":"content of post 2","id":2}]
 @app.get("/")
 def root():
     return {"message":"Hello"}
 
 @app.get("/posts")
 def get_posts():
-    return {"message":"Posts are located here!"}
+    return {"data":my_posts}
 
 
-@app.post("/createposts")
+@app.post("/posts")
 def create_post(post: Post):
-    print(post.title)
+    print(post)
+    print(post.dict())
     return {"data":post}
 
