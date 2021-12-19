@@ -46,7 +46,7 @@ def create_post(post: Post):
     return {"data":post_dict}
 
 @app.get("/post/{id}")
-def get_post(id:int):
+def get_post(id: int):
     post = find_post(int(id))
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -54,7 +54,7 @@ def get_post(id:int):
     return {"post_detail":post}
 
 @app.delete("/post/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id:int):
+def delete_post(id: int):
 
     index = find_post_by_index(id)
     if index == None:
@@ -64,3 +64,13 @@ def delete_post(id:int):
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+@app.put("/post/{id}")
+def update_post(id: int, post: Post):
+    post_dict = post.dict()
+    index = find_post_by_index(id)
+    if index == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id {id} does not exsist")
+    post_dict['id'] = id
+    my_posts[index] = post_dict
+    return {"data":post_dict}
