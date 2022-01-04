@@ -1,4 +1,5 @@
 from typing import Optional
+from typing import List
 from fastapi import FastAPI, Response, status, HTTPException, Depends
 from fastapi.param_functions import Body
 from pydantic import BaseModel
@@ -39,14 +40,14 @@ def root():
 
 
 
-@app.get("/posts")
+@app.get("/posts", response_model=List[schemas.Post])
 def get_posts(db: Session = Depends(get_db)):
     
     posts = db.query(models.Post).all()
     return posts
 
 
-@app.post("/posts", status_code = status.HTTP_201_CREATED,response_model=schemas.Post)
+@app.post("/posts", status_code = status.HTTP_201_CREATED, response_model=schemas.Post)
 def create_post(post: schemas.CreatePost, db: Session = Depends(get_db)):
     new_post = models.Post(**post.dict())
     #commit 
@@ -54,21 +55,21 @@ def create_post(post: schemas.CreatePost, db: Session = Depends(get_db)):
     db.commit()
     #return the created post
     db.refresh(new_post)
-    new_post
+    return new_post
 
-@app.get("/post/{id}")
+@app.get("/posts/{id}", response_model = schemas.Post)
 def get_post(id: int, db: Session = Depends(get_db)):
    
     post = db.query(models.Post).filter(models.Post.id == id).first()
     if not post:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, 
                             detail = f"Post with id {id} was not found")
-    post
+    return post
 
 
 
 
-@app.delete("/post/{id}", status_code = status.HTTP_204_NO_CONTENT)
+@app.delete("/posts/{id}", status_code = status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db)):
    
     post = db.query(models.Post).filter(models.Post.id == id)
@@ -81,20 +82,26 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
     return Response(status_code = status.HTTP_204_NO_CONTENT)
 
-@app.put("/post/{id}")
+@app.put("/posts/{id}", response_model = schemas.Post)
 def update_post(id: int, updated_post: schemas.CreatePost, db: Session = Depends(get_db)):
 
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post = post_query.first()
+    
 
     if post == None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND, 
                             detail = f"post with id {id} does not exsist")
     
+    
+    print(updated_post.dict())
+    
     post_query.update(
         updated_post.dict()
          ,synchronize_session=False)
-    post_query.first()
+    db.commit()
+    print(post_query.first().title)
+    return post_query.first()
 
 
   
